@@ -40,27 +40,72 @@ function App() {
 
   return (
     <div className="App">
+      <header>
+        <h2
+          style={{
+            textAlign: 'center',
+          }}
+        >
+          Genie.xyz
+        </h2>
+      </header>
+
       <form
         onSubmit={e => {
           e.preventDefault()
           run(fetchCollectionAssets(address))
         }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            marginBottom: '1rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <label htmlFor="collection-address-input">Collection Address</label>
 
-        <input
-          id="collection-address-input"
-          name="collectionAddress"
-          placeholder="Collection Address"
-          onChange={e => setAddress(e.target.value)}
-        />
-        <button type="submit">Submit</button>
+            <input
+              id="collection-address-input"
+              name="collectionAddress"
+              placeholder="Collection Address"
+              style={{
+                marginRight: '0.25rem',
+              }}
+              onChange={e => setAddress(e.target.value)}
+            />
+          </div>
+          <div>
+            <button type="submit">Submit</button>
+          </div>
+        </div>
       </form>
-      <div>
-        Colection Data
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridGap: '1rem',
+        }}
+      >
         {status === 'pending' && <p>Loading...</p>}
         {status === 'resolved' &&
-          paginatedData.map((item: any) => (
-            <div key={item._id}>
-              <img src={item.imageUrl} alt={item.name} />
+          data.map((item: any) => (
+            <div key={item.name}>
+              <img
+                width="100%"
+                height="auto"
+                src={item.imageUrl}
+                alt={item.name}
+              />
             </div>
           ))}
         {status === 'rejected' && <p>{error?.message}</p>}
