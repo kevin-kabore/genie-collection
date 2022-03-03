@@ -3,14 +3,31 @@ import {useAsync} from './utils/hooks'
 
 const API_URL = 'https://api.genie.xyz'
 
-function fetchCollection(address: string) {
+function fetchCollectionAssets(address: string) {
   const options = {
-    filters: {address},
-    limit: 1,
-    // fields: {stats: 1},
+    filters: {
+      address,
+      traits: {},
+    },
+    fields: {
+      address: 1,
+      name: 1,
+      id: 1,
+      imageUrl: 1,
+      currentPrice: 1,
+      currentUsdPrice: 1,
+      paymentToken: 1,
+      animationUrl: 1,
+    },
+    limit: 25,
+    offset: 0,
   }
-  return fetch(`${API_URL}/collections`, {
+
+  return fetch(`${API_URL}/assets`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(options),
   })
 }
@@ -26,10 +43,8 @@ function App() {
       <form
         onSubmit={e => {
           e.preventDefault()
-          run(fetchCollection(address))
+          run(fetchCollectionAssets(address))
         }}
-      >
-        <label htmlFor="collection-address-input">Collection Address</label>
 
         <input
           id="collection-address-input"
