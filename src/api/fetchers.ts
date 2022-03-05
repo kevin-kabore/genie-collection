@@ -112,10 +112,10 @@ export function usePaginateCollectionAssets({
   )
   const status = error
     ? 'rejected'
-    : data
-    ? 'resolved'
     : isValidating
     ? 'pending'
+    : data
+    ? 'resolved'
     : 'idle'
   return {
     status,
