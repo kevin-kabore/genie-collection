@@ -35,30 +35,52 @@ function CollectionDetails({address}: {address: string}) {
     perPage: 10,
   })
 
-  if (status === 'idle') {
-    return <p>Submit a valid collection address to see its available assets</p>
-  } else if (status === 'pending') {
-    return <div>Loading...</div>
-  } else if (status === 'resolved') {
-    // resolved
-    return (
-      <React.Fragment>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gridGap: '1rem',
-            textAlign: 'center',
-          }}
-        >
-          <AssetDataList assets={(collectionAssets ?? []).flat()} />
-        </div>
-        <button onClick={() => setSize(size + 1)}>load more</button>
-      </React.Fragment>
-    )
-  } else {
+  // TODO: Use ref for infinite scroll and fetch
+  // const loaderRef = React.useRef<HTMLDivElement>(null)
+  // const handleObserver = React.useCallback(
+  //   entries => {
+  //     const target = entries[0]
+  //     if (target.isIntersecting) {
+  //       setSize(pg => pg + 1)
+  //     }
+  //   },
+  //   [setSize],
+  // )
+
+  // React.useEffect(() => {
+  //   const option = {
+  //     root: null,
+  //     rootMargin: '200px',
+  //     threshold: 0,
+  //   }
+  //   const observer = new IntersectionObserver(handleObserver, option)
+  //   if (loaderRef.current) observer.observe(loaderRef.current)
+  // }, [handleObserver])
+
+  // <div ref={loaderRef} />
+
+  if (status === 'error') {
     throw error
   }
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridGap: '1rem',
+        textAlign: 'center',
+      }}
+    >
+      {status === 'idle' ? (
+        <p>Submit a valid collection address to see its available assets</p>
+      ) : status === 'pending' ? (
+        <div>Loading...</div>
+      ) : (
+        <AssetDataList assets={(collectionAssets ?? []).flat()} />
+      )}
+    </div>
+  )
 }
 
 function CollectionSection({
