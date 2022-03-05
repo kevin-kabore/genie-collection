@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {FetchErrorBoundary} from '../utils/ErrorBoundary'
-import {useGetCollection} from '../api/fetchers'
+import {usePaginateCollectionAssets} from '../api/fetchers'
 
 function AssetDataView({asset}: {asset: any}) {
   return (
@@ -23,7 +23,17 @@ function AssetDataList({assets}: {assets: any[]}) {
 }
 
 function CollectionDetails({address}: {address: string}) {
-  const {status, data, error} = useGetCollection(address)
+  const {
+    status,
+    error,
+    data: collectionAssets,
+    setSize,
+    size,
+  } = usePaginateCollectionAssets({
+    address,
+    page: 1,
+    perPage: 10,
+  })
 
   if (status === 'idle') {
     return <p>Submit a valid collection address to see its available assets</p>
@@ -31,7 +41,21 @@ function CollectionDetails({address}: {address: string}) {
     return <div>Loading...</div>
   } else if (status === 'resolved') {
     // resolved
-    return <AssetDataList assets={data} />
+    return (
+      <React.Fragment>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridGap: '1rem',
+            textAlign: 'center',
+          }}
+        >
+          <AssetDataList assets={(collectionAssets ?? []).flat()} />
+        </div>
+        <button onClick={() => setSize(size + 1)}>load more</button>
+      </React.Fragment>
+    )
   } else {
     throw error
   }
@@ -52,16 +76,7 @@ function CollectionSection({
         }}
         resetKeys={[address]}
       >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gridGap: '1rem',
-            textAlign: 'center',
-          }}
-        >
-          <CollectionDetails address={address} />
-        </div>
+        <CollectionDetails address={address} />
       </FetchErrorBoundary>
     </div>
   )
