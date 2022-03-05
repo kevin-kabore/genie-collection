@@ -1,7 +1,6 @@
 import * as React from 'react'
-import {useAsync} from '../utils/hooks'
 import {FetchErrorBoundary} from '../utils/ErrorBoundary'
-import {fetchCollectionAssets} from '../APIClient/assets'
+import {useGetCollection} from '../api/fetchers'
 
 function AssetDataView({asset}: {asset: any}) {
   return (
@@ -13,31 +12,28 @@ function AssetDataView({asset}: {asset: any}) {
 function AssetDataList({assets}: {assets: any[]}) {
   return (
     <React.Fragment>
-      {assets.map(asset => (
-        <AssetDataView asset={asset} key={asset.name ?? asset.owner.address} />
+      {assets.map((asset, i) => (
+        <AssetDataView
+          asset={asset}
+          key={`${asset.name}-${asset.owner.address}-${i}`}
+        />
       ))}
     </React.Fragment>
   )
 }
 
 function CollectionDetails({address}: {address: string}) {
-  const {status, data, error, run} = useAsync()
-
-  React.useEffect(() => {
-    if (!address) return
-    run(fetchCollectionAssets(address))
-  }, [address, run])
+  const {status, data, error} = useGetCollection(address)
 
   if (status === 'idle') {
     return <p>Submit a valid collection address to see its available assets</p>
   } else if (status === 'pending') {
     return <div>Loading...</div>
-  } else if (status === 'rejected') {
-    // will get caught by the FetchErrorBoundary
-    throw error
-  } else {
+  } else if (status === 'resolved') {
     // resolved
     return <AssetDataList assets={data} />
+  } else {
+    throw error
   }
 }
 
