@@ -70,7 +70,7 @@ export const fetcherInfinite = async (url: string, payload?: string) => {
     .then(({data}) => data)
 }
 
-export function usePaginateCollectionAssets({
+export function useGetCollectionInfinite({
   address,
   perPage = 25,
   page = 0,
@@ -97,7 +97,8 @@ export function usePaginateCollectionAssets({
     limit: perPage,
     offset: page,
   }
-  const {data, error, isValidating, mutate, size, setSize} = useSWRInfinite(
+
+  const {data, error, size, mutate, setSize, isValidating} = useSWRInfinite(
     (pageIndex, previousPageData) => {
       if (!address || (previousPageData && !previousPageData.length)) {
         return null
@@ -110,18 +111,21 @@ export function usePaginateCollectionAssets({
     },
     fetcherInfinite,
   )
+
   const status = error
     ? 'rejected'
-    : isValidating
+    : !data && !error && isValidating
     ? 'pending'
     : data
     ? 'resolved'
     : 'idle'
+
   return {
     status,
     data: data,
     error,
     setSize,
     size,
+    mutate,
   }
 }
