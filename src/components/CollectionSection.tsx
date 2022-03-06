@@ -1,24 +1,12 @@
 import * as React from 'react'
 import {FetchErrorBoundary} from '../utils/ErrorBoundary'
-import {usePaginateCollectionAssets} from '../api/fetchers'
+import {useGetCollectionInfinite} from '../api/fetchers'
 
-function AssetDataView({asset}: {asset: any}) {
+function AssetCard({asset}: {asset: any}) {
   return (
     <div>
       <img width="100%" height="auto" src={asset.imageUrl} alt={asset.name} />
     </div>
-  )
-}
-function AssetDataList({assets}: {assets: any[]}) {
-  return (
-    <React.Fragment>
-      {assets.map((asset, i) => (
-        <AssetDataView
-          asset={asset}
-          key={`${asset.name}-${asset.owner.address}-${i}`}
-        />
-      ))}
-    </React.Fragment>
   )
 }
 
@@ -28,58 +16,86 @@ function CollectionDetails({address}: {address: string}) {
     error,
     data: collectionAssets,
     setSize,
-    size,
-  } = usePaginateCollectionAssets({
+  } = useGetCollectionInfinite({
     address,
     page: 1,
     perPage: 10,
   })
 
-  // TODO: Use ref for infinite scroll and fetch
-  // const loaderRef = React.useRef<HTMLDivElement>(null)
-  // const handleObserver = React.useCallback(
-  //   entries => {
-  //     const target = entries[0]
-  //     if (target.isIntersecting) {
-  //       setSize(pg => pg + 1)
-  //     }
-  //   },
-  //   [setSize],
-  // )
+  const setSizeRef = React.useRef(setSize)
+  const observer = React.useRef(
+    new IntersectionObserver(
+      (entries: any[]) => {
+        const [entry] = entries
+        if (entry.isIntersecting) {
+          setSizeRef.current(size => size + 1)
+        }
+      },
+      {threshold: 1},
+    ),
+  )
 
-  // React.useEffect(() => {
-  //   const option = {
-  //     root: null,
-  //     rootMargin: '200px',
-  //     threshold: 0,
-  //   }
-  //   const observer = new IntersectionObserver(handleObserver, option)
-  //   if (loaderRef.current) observer.observe(loaderRef.current)
-  // }, [handleObserver])
+  // we need to use a ref to update the setSize function used by the ref
+  React.useEffect(() => {
+    setSizeRef.current = setSize
+  }, [setSize])
 
-  // <div ref={loaderRef} />
+  const [element, setElement] = React.useState<HTMLElement | null>(null)
 
-  if (status === 'error') {
+  React.useEffect(() => {
+    const currentElement = element
+    const currentObserver = observer.current
+    if (currentElement) {
+      currentObserver.observe(currentElement)
+    }
+    return () => {
+      if (currentElement) {
+        currentObserver.unobserve(currentElement)
+      }
+    }
+  }, [element])
+
+  if (status === 'rejected') {
     throw error
   }
 
+  const allAssets = (collectionAssets ?? []).flat()
+
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gridGap: '1rem',
-        textAlign: 'center',
-      }}
-    >
-      {status === 'idle' ? (
-        <p>Submit a valid collection address to see its available assets</p>
-      ) : status === 'pending' ? (
-        <div>Loading...</div>
-      ) : (
-        <AssetDataList assets={(collectionAssets ?? []).flat()} />
-      )}
-    </div>
+    <section>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridGap: '1rem',
+          textAlign: 'center',
+        }}
+      >
+        {status === 'idle' ? (
+          <p>Submit a valid collection address to see its available assets</p>
+        ) : status === 'pending' ? (
+          <div>Loading...</div>
+        ) : (
+          <React.Fragment>
+            {allAssets.map((asset, i) => {
+              return i === allAssets.length - 1 ? (
+                <div
+                  ref={setElement}
+                  key={`${asset.name}-${asset.owner.address}-${i}`}
+                >
+                  <AssetCard asset={asset} />
+                </div>
+              ) : (
+                <AssetCard
+                  asset={asset}
+                  key={`${asset.name}-${asset.owner.address}-${i}`}
+                />
+              )
+            })}
+          </React.Fragment>
+        )}
+      </div>
+    </section>
   )
 }
 
